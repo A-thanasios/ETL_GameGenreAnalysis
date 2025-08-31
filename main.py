@@ -1,8 +1,10 @@
 import os
 
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 from src.SteamAPI import get_user_games_data
+from src.db.user_src.users import User
 
 
 
@@ -14,7 +16,10 @@ def main():
         exit(1)
 
     print("Running")
-    get_user_games_data(steam_api_key, '76561198287452552')
+    db_url = os.getenv('SQLALCHEMY_URL')
+    engine = create_engine(db_url, echo=True)
+    User.add_user(engine, '76561198287452552')
+    #get_user_games_data(steam_api_key, '76561198287452552')
 
 
 if __name__ == "__main__":
