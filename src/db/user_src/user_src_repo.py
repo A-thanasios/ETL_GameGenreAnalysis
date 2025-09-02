@@ -20,15 +20,24 @@ class UserSrcRepo(UserRepo):
             session.add_all(users)
             session.commit()
 
-    def read(self, user_id: str|list[str]) -> User | list[User] | None:
-        if isinstance(user_id, str):
-            with Session(self.engine) as session:
-                return session.scalars(User.select_stmt(user_id)).one()
-        elif isinstance(user_id, list):
-            with Session(self.engine) as session:
-                return list(session.scalars(User.select_stmt(user_id)).all())
-        else:
+    def read(self, user_id: str|list[str], **kwargs) -> User | list[User] | None:
+        ids = [user_id] if isinstance(user_id, str) else list(user_id or [])
+        if not ids:
             return None
+
+        update_kwargs: dict = {}
+        if 'is_private' in kwargs:
+            update_kwargs['isPrivate'] = kwargs['is_private']
+        if 'is_extracted' in kwargs:
+            update_kwargs['isExtracted'] = kwargs['is_extracted']
+
+
+        with Session(self.engine) as session:
+            result = session.scalars(User.select_stmt(ids, **update_kwargs))
+            if isinstance(user_id, str):
+                return result.one()
+            else:
+                return list(result.all())
 
     def update(self, user_id: str | list[str], **kwargs) -> None:
         user_ids = [user_id] if isinstance(user_id, str) else list(user_id or [])

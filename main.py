@@ -5,8 +5,8 @@ from sqlalchemy import create_engine
 from src.SteamAPI import *
 from src.db.database_factory import DatabaseFactory, DBType
 
-from src.db.user_src.users import User
 from src.db.user_src.user_src_repo import UserSrcRepo
+from src.user_src_service import UserSrcService
 
 
 def main():
@@ -17,14 +17,11 @@ def main():
         exit(1)
     user_src_db = DatabaseFactory.init_db(DBType.USER_SRC)
     user_src_repo = UserSrcRepo(user_src_db)
+    user_src_service = UserSrcService()
 
     print("Running")
-
-
-
-    db_url = os.getenv('SQLALCHEMY_URL')
-    engine = create_engine(db_url, echo=True)
-    #print(User.get_users(engine, ['76561198287452552']))
+    user_src_service.get_new_users(user_src_repo)
+    exit(0)
     data = get_user_games_data(steam_api_key, '76561198015279647')
     friends = get_user_friend_list(steam_api_key, '76561198015279647')
 

@@ -22,11 +22,15 @@ class User(Base):
 
 
     @staticmethod
-    def select_stmt(user_id: str | list[str]):
-        stmt = select(User)
+    def select_stmt(user_id: list[str], **kwargs):
+        stmt = select(User).where(User.steam_id.in_(user_id))
+        if kwargs:
+            if 'is_private' in kwargs:
+                stmt = stmt.where(User.isPrivate == kwargs['is_private'])
+            if 'is_extracted' in kwargs:
+                stmt = stmt.where(User.isExtracted == kwargs['is_extracted'])
 
-        return stmt.where(User.steam_id.in_(user_id)) if isinstance(user_id, list)\
-            else stmt.where(User.steam_id == user_id)
+        return stmt
 
     @staticmethod
     def update_stmt(user_id: str | list[str], **kwargs):
@@ -39,4 +43,4 @@ class User(Base):
 
 
     def __repr__(self) -> str:
-        return f"<User(id={self.id},steam_id={self.steam_id}, createdAt={self.createdAt}, updatedAt={self.updatedAt}, isPrivate={self.isPrivate}, isExtracted={self.isExtracted})>"
+        return f"<User(id={self.id}, steam_id={self.steam_id}, createdAt={self.createdAt}, updatedAt={self.updatedAt}, isPrivate={self.isPrivate}, isExtracted={self.isExtracted})>"

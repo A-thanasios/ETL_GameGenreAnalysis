@@ -16,7 +16,7 @@ class UserRepo(ABC):
         pass
 
     @abstractmethod
-    def read(self, user_id: str|list[str]):
+    def read(self, user_id: str|list[str], **kwargs):
         pass
 
     @abstractmethod
