@@ -1,5 +1,7 @@
+from typing import Mapping, Any
+
 from sqlalchemy import delete, func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, InstrumentedAttribute
 
 from src.db.database_factory import Database
 from src.db.user_repo import UserRepo
@@ -20,20 +22,15 @@ class UserSrcRepo(UserRepo):
             session.add_all(users)
             session.commit()
 
-    def read(self, user_id: str|list[str], **kwargs) -> User | list[User] | None:
+    def read(self, user_id: str|list[str]|None=None,
+            filter_by: Mapping[InstrumentedAttribute, Any] | None=None,
+            ordered_by: Mapping[InstrumentedAttribute, bool] | None=None,
+            limit: int|None= 100) -> User | list[User] | None:
+
         ids = [user_id] if isinstance(user_id, str) else list(user_id or [])
-        if not ids:
-            return None
-
-        update_kwargs: dict = {}
-        if 'is_private' in kwargs:
-            update_kwargs['isPrivate'] = kwargs['is_private']
-        if 'is_extracted' in kwargs:
-            update_kwargs['isExtracted'] = kwargs['is_extracted']
-
 
         with Session(self.engine) as session:
-            result = session.scalars(User.select_stmt(ids, **update_kwargs))
+            result = session.scalars(User.select_stmt(ids, filter_by, ordered_by))
             if isinstance(user_id, str):
                 return result.one()
             else:

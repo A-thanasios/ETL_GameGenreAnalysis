@@ -1,13 +1,16 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Mapping, Any
+from enum import Enum
 
-from sqlalchemy import DateTime, func, String, false, Engine, select, update
+from sqlalchemy import DateTime, func, String, false, select, update
 from sqlalchemy.orm import (
     mapped_column,
-    Mapped, Session
+    Mapped, InstrumentedAttribute
 )
 
 from src.db.user_src.base import Base
+
+
 
 
 class User(Base):
@@ -21,14 +24,24 @@ class User(Base):
     isExtracted: Mapped[bool] = mapped_column(server_default=false(), nullable=False)
 
 
+
+
     @staticmethod
-    def select_stmt(user_id: list[str], **kwargs):
-        stmt = select(User).where(User.steam_id.in_(user_id))
-        if kwargs:
-            if 'is_private' in kwargs:
-                stmt = stmt.where(User.isPrivate == kwargs['is_private'])
-            if 'is_extracted' in kwargs:
-                stmt = stmt.where(User.isExtracted == kwargs['is_extracted'])
+    def select_stmt(user_id: list[str] | None= None,
+                    filter_by: Mapping[InstrumentedAttribute, Any] | None=None,
+                    ordered_by: Mapping[InstrumentedAttribute, bool] | None=None,
+                    limit: int | None=100):
+        stmt = select(User)
+        if user_id:
+            stmt.where(User.steam_id.in_(user_id))
+        if filter_by:
+            for col, val in filter_by.items():
+                stmt = stmt.where(col == val)
+        if limit:
+            stmt = stmt.limit(limit)
+        if ordered_by:
+            for col, b_desc in ordered_by.items():
+                stmt = stmt.order_by(col.desc() if b_desc else col.asc())
 
         return stmt
 
@@ -40,6 +53,9 @@ class User(Base):
         else:
             stmt = stmt.where(User.steam_id.in_(user_id))
         return stmt.values(**kwargs)
+
+
+
 
 
     def __repr__(self) -> str:
