@@ -1,3 +1,5 @@
+from prefect import flow, task
+
 from src.SteamAPIClient import SteamAPIClient
 from src.db.user_src.user_src_repo import UserSrcRepo
 
@@ -6,15 +8,24 @@ class UserSrcService:
         self.repo = repo
         self.steam_client = steam_client
 
-
+    @task
     def get_new_users(self, chunk_size:int=100):
-        # Get a list of users
-            # Not updated not private first
+        user_lst = self.__read_users_id(chunk_size)
+
+        if not user_lst:
+            return
+
+        new_users_list = self.__get_new_ids(user_lst)
+
+        if new_users_list:
+            self.repo.create(new_users_list)
+
+    @task
+    def __read_users_id(self, chunk_size):
         user_lst = self.repo.read(
             filter_by={'isPrivate': False, 'updatedAt': None},
             limit=chunk_size)
 
-            # Then If updated, and isPrivate is false
         if len(user_lst) < chunk_size:
             user_lst.extend(self.repo.read(
                 filter_by={'isPrivate': False},
@@ -22,15 +33,14 @@ class UserSrcService:
                 limit=chunk_size))
 
         if len(user_lst) < chunk_size:
-            # Else If updated > year and isPrivate is true
             user_lst.extend(self.repo.read(
                 filter_by={'isPrivate': True},
                 ordered_by={'updatedAt': False},
                 limit=chunk_size))
+        return user_lst
 
-        if not user_lst:
-            return
-
+    @task
+    def __get_new_ids(self, user_lst):
         new_users_list = []
         for user in user_lst:
             try:
@@ -44,24 +54,10 @@ class UserSrcService:
 
                 friend_list = [friend.get('steamid') for friend in friend_dict_list]
 
-
-
                 new_users_list.extend(friend_list)
                 self.repo.update(user.steam_id, is_private=False)
             elif code == 401:
                 self.repo.update(user.steam_id, is_private=True)
             else:
                 print(f"Error fetching friend list for user {user.steam_id}")
-
-        if new_users_list:
-            print(new_users_list)
-            self.repo.create(new_users_list)
-
-
-
-    # Fetch their friend list
-
-
-    # if a response is 401 update user to private
-
-    # if a response is ok and give it users, try to save them into db
+        return new_users_list

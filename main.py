@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from prefect import flow
 
 from src.SteamAPIClient import *
 from src.db.database_factory import DatabaseFactory, DBType
@@ -8,8 +8,14 @@ from src.db.database_factory import DatabaseFactory, DBType
 from src.db.user_src.user_src_repo import UserSrcRepo
 from src.user_src_service import UserSrcService
 
-
+@flow
 def main():
+    user_src_service = prepare_env()
+
+    user_src_service.get_new_users()
+
+
+def prepare_env():
     load_dotenv(dotenv_path='.venv/.env')
     steam_api_key = os.getenv('STEAM_API_KEY')
     if not steam_api_key:
@@ -19,14 +25,10 @@ def main():
     user_src_repo = UserSrcRepo(user_src_db)
     steam_api_client = SteamAPIClient(steam_api_key)
     user_src_service = UserSrcService(user_src_repo, steam_api_client)
+    return user_src_service
 
-    print("Running")
-    user_src_service.get_new_users(chunk_size=10)
-    exit(0)
-    #data = get_user_games_data(steam_api_key, '76561198015279647')
-    #friends = get_user_friend_list(steam_api_key, '76561198015279647')
-
-    print(f"{data} \n {friends}")
 
 if __name__ == "__main__":
-    main()
+    main.serve(
+        cron='* * * * *'
+    )

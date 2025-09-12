@@ -21,8 +21,8 @@ class User(Base):
     steam_id: Mapped[str] = mapped_column(String(17),unique=True, nullable=False)
     createdAt: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updatedAt: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    extractedAt: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
     isPrivate: Mapped[bool] = mapped_column(server_default=false(), nullable=False)
-    isExtracted: Mapped[bool] = mapped_column(server_default=false(), nullable=False)
 
 
 
