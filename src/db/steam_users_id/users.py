@@ -2,14 +2,14 @@ from datetime import datetime
 from typing import Optional, Mapping, Any, TypeVar
 from enum import Enum
 
-from sqlalchemy import DateTime, func, String, false, select, update
+from sqlalchemy import DateTime, delete, func, String, false, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import (
     mapped_column,
     Mapped, InstrumentedAttribute
 )
 
-from src.db.user_src.base import Base
+from db.steam_users_id.base import Base
 
 V = TypeVar("V")
 
@@ -21,11 +21,15 @@ class User(Base):
     steam_id: Mapped[str] = mapped_column(String(17),unique=True, nullable=False)
     createdAt: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updatedAt: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
-    extractedAt: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    extractedAt: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
     isPrivate: Mapped[bool] = mapped_column(server_default=false(), nullable=False)
 
 
 
+
+    @staticmethod
+    def insert_stmt(user_id: Mapping[InstrumentedAttribute, str] | list[Mapping[InstrumentedAttribute, str]]):
+        return insert(User).values(user_id).on_conflict_do_nothing(index_elements=[User.steam_id]).returning(User.steam_id)
 
     @staticmethod
     def select_stmt(user_id: list[str] | None= None,
@@ -47,10 +51,6 @@ class User(Base):
         return stmt
 
     @staticmethod
-    def insert_stmt(user_id: Mapping[InstrumentedAttribute, str]):
-        return insert(User).values(user_id).on_conflict_do_nothing(index_elements=[User.steam_id])
-
-    @staticmethod
     def update_stmt(user_id: str | list[str], **kwargs):
         stmt = update(User)
         if not isinstance(user_id, list):
@@ -58,6 +58,14 @@ class User(Base):
         else:
             stmt = stmt.where(User.steam_id.in_(user_id))
         return stmt.values(**kwargs)
+    
+    @staticmethod
+    def delete_stmt(user_id: str | list [str]):
+        stmt = delete(User)
+        if not isinstance(user_id, list):
+            return stmt.where(User.steam_id == user_id)
+        else:
+            return stmt.where(User.steam_id.in_(user_id))
 
     @staticmethod
     def to_attr_mapping(data: Mapping[str, V]|dict[str, V]) -> dict[InstrumentedAttribute, V]:

@@ -1,0 +1,11 @@
+{
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/.idea": true
+    },
+    "python.testing.pytestArgs": [
+        "test"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
+}

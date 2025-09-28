@@ -7,7 +7,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from src.db.user_src.base import Base
+from src.db.steam_users_id.base import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -20,7 +20,10 @@ if config.config_file_name is not None:
 
     # Load env vars and set SQLALCHEMY url
     load_dotenv(dotenv_path='.venv/.env')
-    config.set_main_option('sqlalchemy.url', f"postgresql://{os.getenv('APP_DB_USER')}:{os.getenv('APP_DB_PASSWORD')}@postgres:5432/{os.getenv('APP_DB_NAME')}")
+    if os.getenv('DEV_MODE'):
+        config.set_main_option('sqlalchemy.url', os.getenv('SQLALCHEMY_URL_DEV'))
+    else:
+        config.set_main_option('sqlalchemy.url', f"postgresql://{os.getenv('APP_DB_USER')}:{os.getenv('APP_DB_PASSWORD')}@postgres:5432/{os.getenv('APP_DB_NAME')}")
 
 # add your model's MetaData object here
 # for 'autogenerate' support

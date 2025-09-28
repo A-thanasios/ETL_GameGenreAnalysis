@@ -1,5 +1,5 @@
 FROM python:3.12-slim
-LABEL authors="A-thanasios"
+LABEL authors="A-thanasios" name=Extractor
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -14,10 +14,8 @@ COPY alembic ./alembic
 COPY alembic.ini .
 
 COPY src ./src
-COPY main.py .
-COPY alembic/init.sh ./alembic/init.sh
 
 RUN chmod +x ./alembic/init.sh
 
 ENTRYPOINT ["/app/alembic/init.sh"]
-CMD ["python", "main.py"]
+CMD ["python", "src/main.py"]

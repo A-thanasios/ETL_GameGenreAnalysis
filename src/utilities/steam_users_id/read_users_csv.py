@@ -5,7 +5,7 @@ import sys
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
-from src.db.user_src.users import User
+from db.steam_users_id.users import User
 
 
 def main():

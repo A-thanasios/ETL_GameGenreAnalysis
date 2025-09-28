@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.db.database_factory import Database
+from db.database_factory import Database
 
 
 class UserRepo(ABC):
@@ -9,7 +9,7 @@ class UserRepo(ABC):
             raise ValueError("Database is not initialized.")
         if not isinstance(db, Database):
             raise ValueError("Database is not an instance of Database.")
-        self.__db = db
+        self._db = db
 
     @abstractmethod
     def create(self, user_id: str|list[str]):
@@ -29,8 +29,25 @@ class UserRepo(ABC):
 
     @property
     def db(self) -> Database:
-        return self.__db
+        return self._db
 
     @property
     def engine(self) -> Database.engine:
-        return self.__db.engine
+        return self._db.engine
+    
+    @property
+    def session_scope(self):
+        return self._db.session_scope()
+    
+    def execute(self, stmt):
+        with self.session_scope as session:
+            return session.execute(stmt)
+    
+    def scalars(self, stmt):
+        with self.session_scope as session:
+            result = session.scalars(stmt)
+            users = result.all()
+            if users.count == 1:
+                return users[0]
+            else:
+                return users

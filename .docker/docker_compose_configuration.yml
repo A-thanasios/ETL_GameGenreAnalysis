@@ -1,3 +1,4 @@
+name: ETL
 services:
   postgres:
     image: postgres:15-alpine
@@ -66,10 +67,10 @@ services:
 
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
     container_name: app
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
     restart: always
     depends_on:
       postgres:
